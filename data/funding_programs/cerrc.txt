@@ -1,0 +1,34 @@
+Clean Energy for Rural and Remote Communities (CERRC)
+
+Administering body: Natural Resources Canada (NRCan).
+Source URL: https://natural-resources.canada.ca/our-natural-resources/energy-sources-distribution/clean-energy/funding-clean-energy-projects/clean-energy-rural-and-remote-communities-program
+Total fund: Approximately $453 million across multiple intake periods.
+Per-project max: Up to $25 million in capital contribution; capacity-building grants typically smaller (~$50k–$500k).
+Geographic scope: National. Rural and remote communities reliant on diesel or other fossil fuels for heat and power.
+
+Who is eligible
+
+- Indigenous and non-Indigenous communities (this is broader than Reducing Diesel and IODI).
+- Provincial and territorial utilities serving off-grid communities.
+- Independent power producers and project consortia delivering clean energy to off-grid loads.
+- Non-profit and community-based organisations.
+
+What's funded
+
+- Capital costs for renewable electricity generation (wind, solar, run-of-river hydro, geothermal).
+- Battery energy storage paired with renewables.
+- Bioheat and biomass district heating.
+- Capacity building and pre-feasibility / feasibility work.
+- Energy efficiency retrofits in remote community buildings.
+
+Application timing
+
+- Open intake periods announced through NRCan; typically 4–6 month windows roughly every 12–18 months.
+- Capital project intakes are competitive; capacity-building has had more flexible windows historically.
+
+Key caveats
+
+- Community must currently be on a diesel-dominant or fossil-fuel-dominant system. Communities already partly served by clean energy can apply for incremental projects.
+- Funding contribution is typically a share of capital, not full coverage — applicants need to identify the remaining capital (provincial, utility, community equity, debt).
+- Eligibility is broader than the Labrador-only Reducing Diesel program — the island outport communities (Francois, McCallum, La Poile) qualify here.
+- Stacking with other federal programs is allowed but capped at a percentage of total project cost.

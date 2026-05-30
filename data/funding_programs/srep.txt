@@ -1,0 +1,34 @@
+ Smart Renewables and Electrification Pathways (SREPs)
+
+Administering body: Natural Resources Canada (NRCan).
+Source URL: https://natural-resources.canada.ca/our-natural-resources/energy-sources-distribution/clean-energy/funding-clean-energy-projects/smart-renewables-and-electrification-pathways-program
+Total fund: Approximately $2.2 billion over multiple years (expanded under Budget 2023).
+Per-project max: Project-specific; typical capital contributions are tens of millions for utility-scale projects.
+Geographic scope: National. Designed for utility-scale and grid-modernisation projects, applicable to large off-grid systems where scale is sufficient.
+
+ Who is eligible
+
+- Utilities, system operators, independent power producers.
+- Indigenous-led and Indigenous-partnered projects (dedicated stream).
+- Large project consortia working on grid modernisation, smart grids, transmission, or substantial renewable generation.
+
+ What's funded
+
+- Utility-scale wind, solar, storage, run-of-river hydro, geothermal.
+- Grid modernisation (smart-grid hardware, advanced metering, distribution upgrades).
+- Transmission projects supporting renewables interconnection.
+- Critical regional electrification infrastructure.
+- For remote / off-grid: applies when the project is large enough to be treated as a regional system rather than a single-village microgrid.
+
+ Application timing
+
+- Multiple intake rounds per year; specific deadlines published by NRCan.
+- Indigenous stream has separate intake windows.
+
+ Key caveats
+
+- Project scale matters. Smaller community microgrids (capital < ~$5M) are typically a poor fit. SREP is most relevant when projects are large enough to look like utility-scale assets, or when bundled across multiple communities.
+- Applicants must demonstrate the project's contribution to grid reliability, GHG reductions, and electrification goals.
+- Indigenous stream offers higher cost-share ratios and dedicated capacity support compared to the general stream.
+- Stacking with other federal programs (IODI, CERRC) is allowed within program-specific caps; teams should plan stacking up front rather than retrofit.
+- For Meridian: applies to bundled multi-community proposals (e.g., regional microgrid procurement covering 5+ Labrador communities) or to the largest single-community projects (Nain class).

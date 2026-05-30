@@ -1,0 +1,498 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Project Meridian — Tools API",
+    "description": "Five tools the watsonx Orchestrate agents call to build off-diesel pre-feasibility briefs for Newfoundland and Labrador's 20 diesel-dependent communities.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://0673-209-205-254-3.ngrok-free.app",
+      "description": "Public base URL Orchestrate calls"
+    }
+  ],
+  "paths": {
+    "/resource/{community_id}": {
+      "get": {
+        "tags": ["resource-scout"],
+        "summary": "get_resource_data",
+        "description": "Get cached wind, solar, load, and governance data for a community.",
+        "operationId": "get_resource_data",
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Community Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ResourceData" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/design": {
+      "post": {
+        "tags": ["system-designer"],
+        "summary": "size_system",
+        "description": "Size wind + solar + battery + retained diesel for a community.",
+        "operationId": "size_system",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DesignRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SystemSizing" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/economics": {
+      "post": {
+        "tags": ["number-cruncher"],
+        "summary": "compute_economics",
+        "description": "Compute capital cost, fuel and dollar saved, CO2 avoided, payback.",
+        "operationId": "compute_economics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EconomicsRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Economics" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/funding/programs": {
+      "get": {
+        "tags": ["grant-finder"],
+        "summary": "get_funding_programs",
+        "description": "List the four federal funding programs in Grant Finder's catalog.",
+        "operationId": "get_funding_programs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/FundingProgram" },
+                  "type": "array",
+                  "title": "Response Get Funding Programs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/rank": {
+      "post": {
+        "tags": ["portfolio-planner"],
+        "summary": "rank_portfolio",
+        "description": "Rank the 20 communities under a budget cap and three weight sliders (dollar savings, CO2 avoided, equity).",
+        "operationId": "rank_portfolio",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PortfolioRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PortfolioRanking" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["meta"],
+        "summary": "health_check",
+        "description": "Liveness probe — confirms the tools API is up. Not an agent tool.",
+        "operationId": "health_check",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DesignRequest": {
+        "properties": {
+          "community_id": {
+            "type": "string",
+            "title": "Community Id",
+            "examples": ["nain"]
+          },
+          "wind_quality": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Wind Quality",
+            "description": "strong / moderate / weak (auto-classified if omitted)"
+          },
+          "solar_quality": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Solar Quality",
+            "description": "strong / moderate / weak (auto-classified if omitted)"
+          }
+        },
+        "type": "object",
+        "required": ["community_id"],
+        "title": "DesignRequest"
+      },
+      "Economics": {
+        "properties": {
+          "capital_cost_cad": { "$ref": "#/components/schemas/EconomicsRange" },
+          "annual_fuel_saved_litres": {
+            "type": "integer",
+            "title": "Annual Fuel Saved Litres"
+          },
+          "annual_cost_saved_cad": {
+            "type": "integer",
+            "title": "Annual Cost Saved Cad"
+          },
+          "annual_co2_avoided_tonnes": {
+            "type": "integer",
+            "title": "Annual Co2 Avoided Tonnes"
+          },
+          "payback_years": { "type": "number", "title": "Payback Years" }
+        },
+        "type": "object",
+        "required": [
+          "capital_cost_cad",
+          "annual_fuel_saved_litres",
+          "annual_cost_saved_cad",
+          "annual_co2_avoided_tonnes",
+          "payback_years"
+        ],
+        "title": "Economics",
+        "description": "What Number Cruncher returns."
+      },
+      "EconomicsRange": {
+        "properties": {
+          "low": { "type": "integer", "title": "Low" },
+          "point": { "type": "integer", "title": "Point" },
+          "high": { "type": "integer", "title": "High" }
+        },
+        "type": "object",
+        "required": ["low", "point", "high"],
+        "title": "EconomicsRange",
+        "description": "Low/point/high range for capital cost."
+      },
+      "EconomicsRequest": {
+        "properties": {
+          "community_id": {
+            "type": "string",
+            "title": "Community Id",
+            "examples": ["nain"]
+          },
+          "sizing": { "$ref": "#/components/schemas/SystemSizing" }
+        },
+        "type": "object",
+        "required": ["community_id", "sizing"],
+        "title": "EconomicsRequest"
+      },
+      "FundingProgram": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "max_cad": {
+            "type": "integer",
+            "title": "Max Cad",
+            "description": "Headline fund size or per-project cap, in CAD"
+          },
+          "url": { "type": "string", "title": "Url" },
+          "summary": { "type": "string", "title": "Summary" },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "One of: labrador_indigenous, indigenous, remote, utility_scale"
+          }
+        },
+        "type": "object",
+        "required": ["name", "max_cad", "url", "summary", "scope"],
+        "title": "FundingProgram",
+        "description": "A federal/provincial program in Grant Finder's catalog."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PortfolioRanking": {
+        "properties": {
+          "ranked": {
+            "items": { "$ref": "#/components/schemas/RankedCommunity" },
+            "type": "array",
+            "title": "Ranked"
+          },
+          "total_fundable_capital_cad": {
+            "type": "integer",
+            "title": "Total Fundable Capital Cad"
+          },
+          "total_co2_avoided_tonnes": {
+            "type": "integer",
+            "title": "Total Co2 Avoided Tonnes"
+          },
+          "total_annual_cost_saved_cad": {
+            "type": "integer",
+            "title": "Total Annual Cost Saved Cad"
+          },
+          "weights_used": {
+            "additionalProperties": { "type": "number" },
+            "type": "object",
+            "title": "Weights Used"
+          },
+          "error": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ranked",
+          "total_fundable_capital_cad",
+          "total_co2_avoided_tonnes",
+          "total_annual_cost_saved_cad",
+          "weights_used"
+        ],
+        "title": "PortfolioRanking",
+        "description": "What Portfolio Planner returns."
+      },
+      "PortfolioRequest": {
+        "properties": {
+          "budget_cad": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Budget Cad",
+            "examples": [50000000]
+          },
+          "weight_dollar": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Weight Dollar",
+            "default": 0.4
+          },
+          "weight_co2": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Weight Co2",
+            "default": 0.4
+          },
+          "weight_equity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Weight Equity",
+            "default": 0.2
+          }
+        },
+        "type": "object",
+        "required": ["budget_cad"],
+        "title": "PortfolioRequest"
+      },
+      "Range": {
+        "properties": {
+          "low": { "type": "integer", "title": "Low" },
+          "high": { "type": "integer", "title": "High" }
+        },
+        "type": "object",
+        "required": ["low", "high"],
+        "title": "Range",
+        "description": "Low/high range for sizing fields (kW, kWh)."
+      },
+      "RankedCommunity": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "name": { "type": "string", "title": "Name" },
+          "score": { "type": "number", "title": "Score" },
+          "fundable": { "type": "boolean", "title": "Fundable" },
+          "cumulative_cost_cad": {
+            "type": "integer",
+            "title": "Cumulative Cost Cad"
+          },
+          "capital_cost_cad": {
+            "type": "integer",
+            "title": "Capital Cost Cad"
+          },
+          "annual_co2_avoided_tonnes": {
+            "type": "integer",
+            "title": "Annual Co2 Avoided Tonnes"
+          },
+          "annual_cost_saved_cad": {
+            "type": "integer",
+            "title": "Annual Cost Saved Cad"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "score",
+          "fundable",
+          "cumulative_cost_cad",
+          "capital_cost_cad",
+          "annual_co2_avoided_tonnes",
+          "annual_cost_saved_cad"
+        ],
+        "title": "RankedCommunity",
+        "description": "One row in the Portfolio Planner's ranked output."
+      },
+      "ResourceData": {
+        "properties": {
+          "wind_speed_80m_mps": {
+            "type": "number",
+            "title": "Wind Speed 80M Mps"
+          },
+          "solar_ghi_kwh_m2_day": {
+            "type": "number",
+            "title": "Solar Ghi Kwh M2 Day"
+          },
+          "lat": { "type": "number", "title": "Lat" },
+          "lon": { "type": "number", "title": "Lon" },
+          "current_diesel_kw_avg": {
+            "type": "integer",
+            "title": "Current Diesel Kw Avg"
+          },
+          "annual_diesel_litres": {
+            "type": "integer",
+            "title": "Annual Diesel Litres"
+          },
+          "population": { "type": "integer", "title": "Population" },
+          "region": { "type": "string", "title": "Region" },
+          "governance": { "type": "string", "title": "Governance" }
+        },
+        "type": "object",
+        "required": [
+          "wind_speed_80m_mps",
+          "solar_ghi_kwh_m2_day",
+          "lat",
+          "lon",
+          "current_diesel_kw_avg",
+          "annual_diesel_litres",
+          "population",
+          "region",
+          "governance"
+        ],
+        "title": "ResourceData",
+        "description": "What Resource Scout returns for a community."
+      },
+      "SystemSizing": {
+        "properties": {
+          "wind_kw": { "$ref": "#/components/schemas/Range" },
+          "solar_kw": { "$ref": "#/components/schemas/Range" },
+          "battery_kwh": { "$ref": "#/components/schemas/Range" },
+          "retained_diesel_kw": {
+            "type": "integer",
+            "title": "Retained Diesel Kw"
+          },
+          "mix_label": { "type": "string", "title": "Mix Label" },
+          "sizing_rationale": { "type": "string", "title": "Sizing Rationale" }
+        },
+        "type": "object",
+        "required": [
+          "wind_kw",
+          "solar_kw",
+          "battery_kwh",
+          "retained_diesel_kw",
+          "mix_label",
+          "sizing_rationale"
+        ],
+        "title": "SystemSizing",
+        "description": "What System Designer returns."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" },
+          "input": { "title": "Input" },
+          "ctx": { "type": "object", "title": "Context" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

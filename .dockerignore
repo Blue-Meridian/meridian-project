@@ -1,0 +1,67 @@
+# Secrets
+.env
+.env.local
+.env.example
+.ibm/
+
+# Git
+.git/
+.gitattributes
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project documents — not needed in the API image
+/README.md
+/ideas.md
+/problem_statement.md
+/spec.md
+/architecture.md
+/flows.md
+/DEPLOY.md
+/data_sources.md
+/brief.pdf
+/IBM*.pdf
+/Judging*.pdf
+/MUN*.pptx
+/index.html
+
+# Frontend — separate Vercel deploy, not bundled with the API image
+frontend/
+node_modules/
+
+# Tests (not run inside the image)
+tests/
+
+# Generated data — regenerated inside the image build
+data/briefs.json
+
+# Docker artifacts themselves
+Dockerfile
+docker-compose.yml
+Caddyfile
+Caddyfile.example
+.dockerignore
+
+# Claude harness state
+.claude/

@@ -1,0 +1,20 @@
+# Caddy configuration — HTTPS reverse proxy for the FastAPI backend.
+#
+# Setup:
+#   1. Point DNS A record at this VM's public IP:
+#        api.your-domain.com → VM IP
+#   2. Edit the domain below.
+#   3. Save as `Caddyfile` (drop the `.example`).
+#   4. Uncomment the `caddy:` service block in docker-compose.yml.
+#   5. docker compose up -d
+#
+# Caddy provisions Let's Encrypt certs automatically on first request.
+
+api.your-domain.com {
+    reverse_proxy api:8000
+
+    # Allow SSE through without buffering (the /chat endpoint streams).
+    encode gzip
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-Host {host}
+}

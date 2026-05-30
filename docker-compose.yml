@@ -1,0 +1,57 @@
+# Project Meridian — VM deployment.
+#
+# Single service: the FastAPI backend. The React frontend deploys separately
+# to Vercel and calls this over HTTPS.
+#
+# Bring up:
+#   docker compose up -d --build
+# Logs:
+#   docker compose logs -f api
+
+services:
+  api:
+    build: .
+    image: meridian-api:latest
+    container_name: meridian-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Public URL the OpenAPI spec advertises to Orchestrate. Override at
+      # deploy time, e.g. TOOLS_PUBLIC_URL=https://api.your-domain.com.
+      TOOLS_PUBLIC_URL: ${TOOLS_PUBLIC_URL:-http://localhost:8000}
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ─── Optional: Caddy reverse proxy for HTTPS ──────────────────────────────
+  # 1. Point DNS for api.<your-domain> at the VM's public IP.
+  # 2. Copy Caddyfile.example to Caddyfile, edit the domain line.
+  # 3. Uncomment the caddy: service and volumes: block below.
+  # 4. Open ports 80 and 443 on the VM firewall.
+  # 5. docker compose up -d
+  #
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: meridian-caddy
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "443:443/udp"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - api
+
+# volumes:
+#   caddy_data:
+#   caddy_config:
