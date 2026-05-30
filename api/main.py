@@ -223,7 +223,7 @@ def get_briefs():
     return json.loads(_BRIEFS_PATH.read_text(encoding="utf-8"))
 
 
-@app.get("/governance/report", tags=["frontend"])
+@app.get("/governance/report", tags=["frontend"], include_in_schema=False)
 def get_governance_report():
     """Serve the latest governance evaluation report."""
     if not _GOVERNANCE_REPORT_PATH.exists():
@@ -252,7 +252,7 @@ class ChatProxyRequest(BaseModel):
     current_state: Optional[Dict] = None
 
 
-@app.post("/chat", tags=["frontend"])
+@app.post("/chat", tags=["frontend"], include_in_schema=False)
 async def chat_proxy(req: ChatProxyRequest):
     """
     Proxy the React frontend's chat to watsonx.ai (granite mode) or the
