@@ -200,15 +200,19 @@ def rank_portfolio_endpoint(req: PortfolioRequest):
     summary="health_check",
     description="Liveness probe. Not an agent tool.",
     tags=["meta"],
+    include_in_schema=False,
 )
 def health():
     return {"status": "ok", "service": "meridian-api", "version": "0.2.0"}
 
 
 # ── Frontend-supporting routes ──────────────────────────────────────────────
+# include_in_schema=False keeps these out of /openapi.json so Orchestrate
+# doesn't see them as agent tools when you re-import the spec. The routes
+# still work for the React frontend — they're just not advertised.
 
 
-@app.get("/briefs", tags=["frontend"])
+@app.get("/briefs", tags=["frontend"], include_in_schema=False)
 def get_briefs():
     """Serve the 20 pre-computed community briefs to the React frontend."""
     if not _BRIEFS_PATH.exists():

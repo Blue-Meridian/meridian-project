@@ -63,17 +63,25 @@ export function ConversationPanel() {
     setStreaming(true);
     appendMessage({ role: 'assistant', content: '' });
 
+    const chatMode = useStore.getState().chatMode;
+
     try {
       const stream = streamChat({
         messages: [...chatMessages, userMsg],
-        mode: 'granite',
-        current_state: {
-          budget_m: budgetCad / 1e6,
-          w_dollar: weightDollar,
-          w_co2: weightCo2,
-          w_equity: weightEquity,
-          selected_community: selectedId,
-        },
+        mode: chatMode,
+        // Coordinator agents have their own context; only Granite uses the
+        // dashboard state as grounded context. (Saves payload + avoids 400s
+        // if Orchestrate ever validates unknown fields.)
+        current_state:
+          chatMode === 'granite'
+            ? {
+                budget_m: budgetCad / 1e6,
+                w_dollar: weightDollar,
+                w_co2: weightCo2,
+                w_equity: weightEquity,
+                selected_community: selectedId,
+              }
+            : undefined,
       });
       for await (const chunk of stream) {
         updateLastAssistant(chunk);
@@ -104,13 +112,11 @@ export function ConversationPanel() {
       <div className="border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <MeridianAvatar size="sm" />
-          <div className="flex flex-col leading-tight">
+          <div className="flex flex-col leading-tight gap-0.5">
             <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">
               Meridian
             </span>
-            <span className="text-[10px] text-slate-500">
-              watsonx.ai Granite · grounded in briefs.json
-            </span>
+            <ModePills />
           </div>
         </div>
         {!empty && (
@@ -294,6 +300,55 @@ function TypingDots() {
       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.3s]" />
       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.15s]" />
       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
+    </div>
+  );
+}
+
+// ─── Mode pills (Granite ↔ Coordinator) ────────────────────────────────────
+
+function ModePills() {
+  const mode = useStore((s) => s.chatMode);
+  const setMode = useStore((s) => s.setChatMode);
+
+  const Pill = ({
+    value,
+    label,
+    subtitle,
+  }: {
+    value: 'granite' | 'coordinator';
+    label: string;
+    subtitle: string;
+  }) => {
+    const active = mode === value;
+    return (
+      <button
+        type="button"
+        onClick={() => setMode(value)}
+        title={subtitle}
+        className={cn(
+          'px-2 py-0.5 rounded-md text-[10px] font-medium transition-colors',
+          active
+            ? 'bg-ibm-500 text-white'
+            : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800',
+        )}
+      >
+        {label}
+      </button>
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-1 -ml-1">
+      <Pill
+        value="granite"
+        label="Granite"
+        subtitle="watsonx.ai Granite, grounded in briefs.json"
+      />
+      <Pill
+        value="coordinator"
+        label="Coordinator"
+        subtitle="watsonx Orchestrate Coordinator agent (live 5-agent flow)"
+      />
     </div>
   );
 }

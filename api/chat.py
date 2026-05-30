@@ -91,21 +91,43 @@ def stream_via_orchestrate(
     current_state: Optional[dict] = None,
 ) -> Iterator[str]:
     """
-    Stream from the watsonx Orchestrate Coordinator agent. Reads
-    ORCHESTRATE_AGENT_URL + ORCHESTRATE_API_KEY (or falls back to IAM via
-    IBM_CLOUD_API_KEY). Tries OpenAI-style SSE first, then a few
-    Orchestrate-specific shapes.
+    Stream from the watsonx Orchestrate Coordinator agent via the runs API.
+
+    Endpoint: `<base>/v1/orchestrate/runs?stream=true`
+    Body:     {"agent_id": "<uuid>", "message": {"role": "user", "content": "..."}}
+    Wire:     NDJSON event stream — one JSON object per line, no `data:` prefix.
+
+    The Coordinator runs its 5-step pipeline as a fresh thread per call.
+    Multi-turn conversation continuity is intentionally not maintained; each
+    chat-tab message kicks off a self-contained Coordinator run.
+
+    Env vars:
+      ORCHESTRATE_AGENT_URL — full URL ending in `/v1/orchestrate/runs`
+                              (the `?stream=true` is added if missing)
+      ORCHESTRATE_AGENT_ID  — the Coordinator agent's UUID (from the embed config)
+      ORCHESTRATE_API_KEY   — optional; if blank, IBM_CLOUD_API_KEY → IAM bearer
+
+    `current_state` is unused — Coordinator has its own context from the
+    agent's profile and the tools it calls. Kept in the signature for API
+    parity with stream_chat.
     """
-    agent_url = (os.environ.get("ORCHESTRATE_AGENT_URL") or "").strip()
+    base_url = (os.environ.get("ORCHESTRATE_AGENT_URL") or "").strip()
+    agent_id = (os.environ.get("ORCHESTRATE_AGENT_ID") or "").strip()
     api_key = (os.environ.get("ORCHESTRATE_API_KEY") or "").strip()
 
-    if not agent_url:
+    if not base_url:
         yield (
             "⚠️ Coordinator mode needs an Orchestrate REST URL.\n\n"
-            "Set `ORCHESTRATE_AGENT_URL` in `.env` to the Coordinator agent's "
-            "invocation URL (Orchestrate agent builder → Deploy → API).\n\n"
-            "Set `ORCHESTRATE_API_KEY` if your instance uses a dedicated key; "
-            "otherwise the proxy reuses `IBM_CLOUD_API_KEY` via IAM."
+            "Set `ORCHESTRATE_AGENT_URL` in `.env` to your runs endpoint, e.g.\n"
+            "`https://api.us-south.watson-orchestrate.cloud.ibm.com/"
+            "instances/<instance-id>/v1/orchestrate/runs`."
+        )
+        return
+
+    if not agent_id:
+        yield (
+            "⚠️ `ORCHESTRATE_AGENT_ID` not set. Paste the Coordinator agent's "
+            "UUID (the `agentId` field from your Orchestrate embed config)."
         )
         return
 
@@ -117,73 +139,84 @@ def stream_via_orchestrate(
         yield f"⚠️ Couldn't get auth token for Orchestrate: {type(e).__name__}: {e}"
         return
 
-    chat_messages = [
-        {"role": m.get("role"), "content": m.get("content")}
-        for m in messages
-        if m.get("role") in ("user", "assistant", "system") and m.get("content")
-    ]
+    # Find the most recent user message — that's what we send to start the run.
+    last_user_content: Optional[str] = None
+    for m in reversed(messages):
+        if m.get("role") == "user" and m.get("content"):
+            last_user_content = m["content"]
+            break
+    if not last_user_content:
+        yield "⚠️ No user message to send to Coordinator."
+        return
 
-    if current_state:
-        sys_note = (
-            f"Current dashboard state — budget: ${current_state.get('budget_m', '?')}M, "
-            f"weights dollar={current_state.get('w_dollar', 0):.2f}, "
-            f"co2={current_state.get('w_co2', 0):.2f}, "
-            f"equity={current_state.get('w_equity', 0):.2f}."
-        )
-        chat_messages = [{"role": "system", "content": sys_note}] + chat_messages
+    body = {
+        "agent_id": agent_id,
+        "message": {"role": "user", "content": last_user_content},
+    }
 
-    body = {"messages": chat_messages, "stream": True}
+    # Append `?stream=true` if the caller didn't include it.
+    url = base_url
+    if "stream=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}stream=true"
+
     headers = {
         "Authorization": auth_header,
         "Content-Type": "application/json",
-        "Accept": "text/event-stream",
+        "Accept": "application/x-ndjson, text/event-stream",
     }
 
     try:
-        with httpx.stream("POST", agent_url, json=body, headers=headers, timeout=300) as resp:
+        with httpx.stream("POST", url, json=body, headers=headers, timeout=300) as resp:
             if resp.status_code != 200:
                 error_body = resp.read().decode(errors="replace")[:600]
                 yield (
                     f"⚠️ Orchestrate returned HTTP {resp.status_code}.\n\n"
                     f"```\n{error_body}\n```\n\n"
-                    f"Common causes: wrong `ORCHESTRATE_AGENT_URL`, expired or wrong "
-                    f"`ORCHESTRATE_API_KEY`, agent not deployed, or the chat schema "
-                    f"differs from OpenAI's. Check the agent builder's Deploy → API tab."
+                    f"Common causes: wrong `ORCHESTRATE_AGENT_URL`, wrong "
+                    f"`ORCHESTRATE_AGENT_ID`, expired API key, or agent not deployed."
                 )
                 return
 
             for raw in resp.iter_lines():
                 if not raw:
                     continue
-                line = raw if isinstance(raw, str) else raw.decode("utf-8", errors="replace")
-                if not line.startswith("data:"):
+                line = raw if isinstance(raw, str) else raw.decode(
+                    "utf-8", errors="replace"
+                )
+                line = line.strip()
+                if not line:
                     continue
-                data = line[5:].strip()
-                if data == "[DONE]" or not data:
-                    continue
+                # SSE compatibility — strip `data:` prefix if present.
+                if line.startswith("data:"):
+                    line = line[5:].strip()
+                if line == "[DONE]" or not line:
+                    return
                 try:
-                    payload = json.loads(data)
+                    obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                # OpenAI-style delta
-                choices = payload.get("choices") or []
-                if choices:
-                    delta = choices[0].get("delta") or {}
-                    chunk = delta.get("content")
-                    if chunk:
-                        yield chunk
-                        continue
-                # Orchestrate-specific shapes seen in the wild
-                for key in ("content", "delta", "text", "output", "message"):
-                    val = payload.get(key)
-                    if isinstance(val, str) and val:
-                        yield val
-                        break
-                    if isinstance(val, dict):
-                        inner = val.get("content") or val.get("text")
-                        if isinstance(inner, str) and inner:
-                            yield inner
-                            break
+
+                event = obj.get("event")
+                data = obj.get("data") or {}
+
+                # Token-by-token assistant content
+                if event == "message.delta":
+                    delta = data.get("delta") or {}
+                    for item in delta.get("content") or []:
+                        if item.get("response_type") == "text":
+                            text = item.get("text", "")
+                            if text:
+                                yield text
+                    continue
+
+                # Terminal events
+                if event in ("done", "run.completed"):
+                    return
+
+                # `run.step.intermediate` carries "Thinking this through…" type
+                # status messages. We intentionally drop them — the frontend
+                # shows typing dots, so the user already sees progress.
     except httpx.TimeoutException:
         yield "\n\n⚠️ Orchestrate timed out after 300s."
     except Exception as e:
