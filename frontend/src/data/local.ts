@@ -1,34 +1,18 @@
 // Local-first data layer.
 //
-// The 20 community briefs, the governance report, and the portfolio ranking are
-// all STATIC, deterministic artifacts (the backend itself bakes briefs.json into
-// its Docker image at build time). Bundling the same JSON into the frontend means
-// the map, briefs, governance badge, and budget/weight sliders ALWAYS render —
-// instantly, offline, even if the backend VM is asleep or unreachable. Only the
-// live AI chat genuinely needs the backend.
+// The 20 community briefs and the portfolio ranking are STATIC, deterministic
+// artifacts (the backend itself bakes briefs.json into its Docker image at build
+// time). Bundling the same JSON into the frontend means the map, briefs, and
+// budget/weight sliders ALWAYS render — instantly, offline, even if the backend
+// VM is asleep or unreachable. Only the live AI chat genuinely needs the backend.
 //
-// These JSON files are copied from /data/briefs.json and
-// /governance/eval_briefs_report.json. Keep them in sync (see scripts note in
-// the repo). They are the same single source of truth the backend serves.
+// briefs.data.ts is copied from /data/briefs.json — the same single source of
+// truth the backend serves.
 
 import briefsJson from './briefs.data';
-import governanceJson from './governance.data';
-import type {
-  BriefsResponse,
-  GovernanceReport,
-  PortfolioRanking,
-  RankedCommunity,
-} from '../lib/types';
+import type { BriefsResponse, PortfolioRanking, RankedCommunity } from '../lib/types';
 
 export const LOCAL_BRIEFS = briefsJson as unknown as BriefsResponse;
-
-export const LOCAL_GOVERNANCE: GovernanceReport = {
-  verdict: governanceJson.verdict,
-  overall_match_rate: governanceJson.overall_match_rate,
-  total_checks: governanceJson.total_checks,
-  total_passed: governanceJson.total_passed,
-  generation_mode: governanceJson.generation_mode,
-};
 
 /**
  * Port of api/portfolio.py `rank_portfolio` — identical scoring and greedy

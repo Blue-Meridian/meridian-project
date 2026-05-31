@@ -89,11 +89,3 @@ export interface PortfolioRanking {
   weights_used: Record<string, number>;
   error?: string | null;
 }
-
-export interface GovernanceReport {
-  verdict?: string;
-  overall_match_rate?: number | null;
-  total_checks?: number;
-  total_passed?: number;
-  generation_mode?: string;
-}
