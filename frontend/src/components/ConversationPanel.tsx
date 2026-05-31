@@ -8,6 +8,10 @@ import {
   GitCompare,
   TrendingUp,
   PanelLeftClose,
+  Workflow,
+  Zap,
+  MapPin,
+  ListChecks,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,7 +21,8 @@ import { cn } from '../lib/cn';
 import { ContextBar } from './ContextBar';
 import { AgentPipeline } from './AgentPipeline';
 
-const STARTERS = [
+// Granite mode: direct analysis / portfolio questions answered by the model.
+const GRANITE_STARTERS = [
   {
     icon: <Database size={14} />,
     text: 'Tell me about Nain',
@@ -37,6 +42,31 @@ const STARTERS = [
     icon: <TrendingUp size={14} />,
     text: 'Which 5 give the best CO₂ per dollar?',
     detail: 'Ranked by efficiency',
+  },
+];
+
+// Coordinator mode: prompts that kick off the 5-agent Orchestrate pipeline,
+// which assembles a full pre-feasibility brief (not a one-shot answer).
+const COORDINATOR_STARTERS = [
+  {
+    icon: <Workflow size={14} />,
+    text: 'Build a clean energy plan for Nain',
+    detail: 'Runs all 5 specialist agents',
+  },
+  {
+    icon: <Zap size={14} />,
+    text: 'Build a clean energy plan for Natuashish',
+    detail: 'Full pre-feasibility brief',
+  },
+  {
+    icon: <MapPin size={14} />,
+    text: 'Plan the transition for Hopedale',
+    detail: 'Resource → design → economics → funding',
+  },
+  {
+    icon: <ListChecks size={14} />,
+    text: 'What communities can you plan for?',
+    detail: 'List the 20 in scope',
   },
 ];
 
@@ -228,6 +258,17 @@ export function ConversationPanel({
 
 function WelcomeState({ onSend }: { onSend: (s: string) => void }) {
   const chatMode = useStore((s) => s.chatMode);
+  const isCoordinator = chatMode === 'coordinator';
+
+  // The welcome screen is the first thing you see, so it has to make the active
+  // engine obvious: Coordinator frames itself as the multi-agent orchestrator
+  // with plan-building prompts; Granite frames itself as the analysis co-pilot.
+  const starters = isCoordinator ? COORDINATOR_STARTERS : GRANITE_STARTERS;
+  const subtitle = isCoordinator
+    ? 'Multi-agent orchestrator · 5 specialists'
+    : 'Newfoundland & Labrador off-diesel co-pilot';
+  const sectionLabel = isCoordinator ? 'Start a pipeline run' : 'Suggested questions';
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
       <div className="text-center space-y-4">
@@ -236,32 +277,70 @@ function WelcomeState({ onSend }: { onSend: (s: string) => void }) {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             Meridian
           </h1>
-          <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold mt-1">
-            Newfoundland & Labrador off-diesel co-pilot
+          <p
+            className={cn(
+              'text-[11px] uppercase tracking-wide font-semibold mt-1',
+              isCoordinator
+                ? 'text-violet-600 dark:text-violet-300'
+                : 'text-slate-500 dark:text-slate-400',
+            )}
+          >
+            {subtitle}
           </p>
         </div>
-        <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
-          I know the engineering, costs, and federal funding for all{' '}
-          <strong className="text-slate-900 dark:text-slate-100">
-            20 diesel-dependent communities
-          </strong>{' '}
-          in NL. Ask me to plan, compare, rank, or explain — every number traces
-          to a public source.
-        </p>
+        {isCoordinator ? (
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
+            Name a community and my five specialists —{' '}
+            <strong className="text-slate-900 dark:text-slate-100">
+              Resource Scout, System Designer, Number Cruncher, Grant Finder, and
+              Brief Writer
+            </strong>{' '}
+            — run in sequence to produce a full off-diesel pre-feasibility brief.
+            You will see each agent work as it goes.
+          </p>
+        ) : (
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
+            I know the engineering, costs, and federal funding for all{' '}
+            <strong className="text-slate-900 dark:text-slate-100">
+              20 diesel-dependent communities
+            </strong>{' '}
+            in NL. Ask me to plan, compare, rank, or explain — every number traces
+            to a public source.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2.5">
-        <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">
-          Suggested questions
+        <p
+          className={cn(
+            'text-[11px] uppercase tracking-wide font-semibold',
+            isCoordinator
+              ? 'text-violet-600 dark:text-violet-300'
+              : 'text-slate-500 dark:text-slate-400',
+          )}
+        >
+          {sectionLabel}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {STARTERS.map((s) => (
+          {starters.map((s) => (
             <button
               key={s.text}
               onClick={() => onSend(s.text)}
-              className="group text-left px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-ibm-400 dark:hover:border-ibm-500 hover:bg-ibm-50/50 dark:hover:bg-ibm-900/20 transition-colors"
+              className={cn(
+                'group text-left px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors',
+                isCoordinator
+                  ? 'hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-900/20'
+                  : 'hover:border-ibm-400 dark:hover:border-ibm-500 hover:bg-ibm-50/50 dark:hover:bg-ibm-900/20',
+              )}
             >
-              <div className="flex items-center gap-2 text-ibm-600 dark:text-ibm-300 mb-0.5">
+              <div
+                className={cn(
+                  'flex items-center gap-2 mb-0.5',
+                  isCoordinator
+                    ? 'text-violet-600 dark:text-violet-300'
+                    : 'text-ibm-600 dark:text-ibm-300',
+                )}
+              >
                 {s.icon}
                 <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {s.text}
