@@ -51,6 +51,7 @@ load_dotenv(_PROJECT_ROOT / ".env")
 from . import design, economics, funding, portfolio, resource
 from .chat import stream_chat, stream_via_orchestrate
 from .schemas import (
+    CommunityBrief,
     Economics,
     FundingProgram,
     PortfolioRanking,
@@ -188,6 +189,48 @@ def rank_portfolio_endpoint(req: PortfolioRequest):
         req.weight_dollar,
         req.weight_co2,
         req.weight_equity,
+    )
+
+
+@app.get(
+    "/brief/{community_id}",
+    response_model=CommunityBrief,
+    operation_id="get_brief",
+    summary="get_brief",
+    description=(
+        "Return the finished pre-feasibility brief for ONE community: the "
+        "seven-section `brief_markdown` plus the structured numbers (resource, "
+        "system, economics, funding, validation). These come straight from the "
+        "deterministic Python pipeline (the same source as the dashboard), so "
+        "every number is exact. The Brief Writer agent calls this and returns "
+        "`brief_markdown` verbatim — numbers never pass through the LLM, so they "
+        "cannot drift. Accepts a community id ('nain') or display name ('Mary's "
+        "Harbour'); names are normalised to ids."
+    ),
+    tags=["brief-writer"],
+)
+def get_brief(community_id: str):
+    if not _BRIEFS_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="data/briefs.json not found — run `python scripts/run_batch.py --no-llm` first.",
+        )
+    data = json.loads(_BRIEFS_PATH.read_text(encoding="utf-8"))
+    cid = (
+        community_id.strip()
+        .lower()
+        .replace(" ", "_")
+        .replace("’", "")  # curly right apostrophe (e.g. "Pinsent's Arm")
+        .replace("‘", "")  # curly left apostrophe (defensive)
+        .replace("'", "")       # ASCII apostrophe
+    )
+    for community in data.get("communities", []):
+        if community.get("id") == cid:
+            return community
+    valid = ", ".join(c.get("id", "") for c in data.get("communities", []))
+    raise HTTPException(
+        status_code=404,
+        detail=f"Unknown community '{community_id}'. Valid ids: {valid}",
     )
 
 

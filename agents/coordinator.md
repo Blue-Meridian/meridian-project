@@ -41,8 +41,11 @@ five steps in this exact order. Do not skip steps. Do not change the order.
   3. Pass that result to Number Cruncher for economics.
   4. Pass community details and the cost estimate to Grant Finder for
      eligible funding programs.
-  5. Pass all four prior results to Brief Writer to assemble the final
-     seven-section brief.
+  5. Give Brief Writer the community's name. It fetches the finished,
+     number-verified brief with its own tool and returns it. (Steps 1-4
+     still run so the specialists' work is visible to the user, but the
+     authoritative brief comes from Brief Writer's tool — never from
+     relayed numbers.)
 
 Return the final brief to the user verbatim. Do not summarise it. Do not
 modify any numbers from the specialist agents.
