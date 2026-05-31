@@ -1,11 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Send, Plus, Database, Layers, GitCompare, TrendingUp } from 'lucide-react';
+import {
+  Sparkles,
+  Send,
+  Plus,
+  Database,
+  Layers,
+  GitCompare,
+  TrendingUp,
+  PanelLeftClose,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStore } from '../state/store';
-import { streamChat } from '../api/chat';
+import { streamChat, type ChatMessage } from '../api/chat';
 import { cn } from '../lib/cn';
 import { ContextBar } from './ContextBar';
+import { AgentPipeline } from './AgentPipeline';
 
 const STARTERS = [
   {
@@ -30,12 +40,11 @@ const STARTERS = [
   },
 ];
 
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
-export function ConversationPanel() {
+export function ConversationPanel({
+  onCollapse,
+}: {
+  onCollapse?: () => void;
+}) {
   const chatMessages = useStore((s) => s.chatMessages);
   const appendMessage = useStore((s) => s.appendMessage);
   const updateLastAssistant = useStore((s) => s.updateLastAssistant);
@@ -45,6 +54,7 @@ export function ConversationPanel() {
   const weightCo2 = useStore((s) => s.weightCo2);
   const weightEquity = useStore((s) => s.weightEquity);
   const selectedId = useStore((s) => s.selectedId);
+  const chatMode = useStore((s) => s.chatMode);
 
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -61,9 +71,9 @@ export function ConversationPanel() {
     appendMessage(userMsg);
     setInput('');
     setStreaming(true);
-    appendMessage({ role: 'assistant', content: '' });
-
-    const chatMode = useStore.getState().chatMode;
+    // Tag the assistant turn with the engine that produced it so the message
+    // can render the Coordinator pipeline (and stay tagged in history).
+    appendMessage({ role: 'assistant', content: '', mode: chatMode });
 
     try {
       const stream = streamChat({
@@ -87,9 +97,7 @@ export function ConversationPanel() {
         updateLastAssistant(chunk);
       }
     } catch (err) {
-      updateLastAssistant(
-        `\n\n⚠️ ${(err as Error).message.slice(0, 300)}`,
-      );
+      updateLastAssistant(`\n\n⚠️ ${(err as Error).message.slice(0, 300)}`);
     } finally {
       setStreaming(false);
       // Re-focus the input so the next question is one keystroke away
@@ -108,26 +116,48 @@ export function ConversationPanel() {
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-      {/* Panel header — the chat's identity */}
-      <div className="border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <MeridianAvatar size="sm" />
-          <div className="flex flex-col leading-tight gap-0.5">
+      {/* Panel header — the chat's identity. Tints violet in Coordinator mode. */}
+      <div
+        className={cn(
+          'border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors',
+          chatMode === 'coordinator' && 'bg-violet-50/50 dark:bg-violet-950/20',
+        )}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <MeridianAvatar size="sm" variant={chatMode} />
+          <div className="flex flex-col leading-tight gap-0.5 min-w-0">
             <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">
               Meridian
             </span>
             <ModePills />
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+              {chatMode === 'coordinator'
+                ? 'watsonx Orchestrate · 5-agent pipeline'
+                : 'watsonx.ai · Granite 3-8B'}
+            </span>
           </div>
         </div>
-        {!empty && (
-          <button
-            onClick={clearChat}
-            className="text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <Plus size={12} />
-            New conversation
-          </button>
-        )}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {!empty && (
+            <button
+              onClick={clearChat}
+              className="text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Plus size={12} />
+              New conversation
+            </button>
+          )}
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              title="Collapse chat panel"
+              aria-label="Collapse chat panel"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <PanelLeftClose size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages area */}
@@ -197,10 +227,11 @@ export function ConversationPanel() {
 // ─── Welcome state ──────────────────────────────────────────────────────────
 
 function WelcomeState({ onSend }: { onSend: (s: string) => void }) {
+  const chatMode = useStore((s) => s.chatMode);
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
       <div className="text-center space-y-4">
-        <MeridianAvatar size="lg" className="mx-auto" />
+        <MeridianAvatar size="lg" variant={chatMode} className="mx-auto" />
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             Meridian
@@ -276,17 +307,25 @@ function MessageRow({
       </div>
     );
   }
+  // Coordinator turns get the live agent pipeline above the brief; Granite
+  // turns render exactly as before.
+  const isCoordinator = message.mode === 'coordinator';
   return (
     <div className="flex gap-3">
-      <MeridianAvatar size="sm" className="mt-0.5 flex-shrink-0" />
+      <MeridianAvatar
+        size="sm"
+        variant={message.mode}
+        className="mt-0.5 flex-shrink-0"
+      />
       <div className="flex-1 min-w-0">
+        {isCoordinator && <AgentPipeline streaming={streaming} />}
         {message.content ? (
           <article className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:font-semibold prose-h1:text-base prose-h2:text-sm prose-h2:mt-3 prose-h2:mb-1.5 prose-table:text-[12px] prose-td:px-2 prose-th:px-2">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {message.content}
             </ReactMarkdown>
           </article>
-        ) : streaming ? (
+        ) : streaming && !isCoordinator ? (
           <TypingDots />
         ) : null}
       </div>
@@ -320,6 +359,11 @@ function ModePills() {
     subtitle: string;
   }) => {
     const active = mode === value;
+    // Coordinator gets the violet accent so the mode switch reads at a glance.
+    const activeClass =
+      value === 'coordinator'
+        ? 'bg-violet-500 text-white'
+        : 'bg-ibm-500 text-white';
     return (
       <button
         type="button"
@@ -328,7 +372,7 @@ function ModePills() {
         className={cn(
           'px-2 py-0.5 rounded-md text-[10px] font-medium transition-colors',
           active
-            ? 'bg-ibm-500 text-white'
+            ? activeClass
             : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800',
         )}
       >
@@ -357,18 +401,26 @@ function ModePills() {
 
 function MeridianAvatar({
   size = 'sm',
+  variant = 'granite',
   className,
 }: {
   size?: 'sm' | 'lg';
+  variant?: 'granite' | 'coordinator';
   className?: string;
 }) {
   const dims = size === 'lg' ? 'w-14 h-14' : 'w-7 h-7';
   const iconSize = size === 'lg' ? 24 : 14;
+  // IBM-blue for Granite, violet for the Orchestrate Coordinator.
+  const gradient =
+    variant === 'coordinator'
+      ? 'from-violet-400 via-violet-500 to-violet-700'
+      : 'from-ibm-400 via-ibm-500 to-ibm-700';
   return (
     <div
       className={cn(
         dims,
-        'rounded-full bg-gradient-to-br from-ibm-400 via-ibm-500 to-ibm-700 flex items-center justify-center shadow-sm',
+        'rounded-full bg-gradient-to-br flex items-center justify-center shadow-sm',
+        gradient,
         className,
       )}
     >

@@ -3,6 +3,8 @@ import { API_BASE } from './client';
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  /** Which engine produced this message — drives the Coordinator pipeline UI. */
+  mode?: 'granite' | 'coordinator';
 }
 
 export interface ChatRequest {

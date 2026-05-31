@@ -1,5 +1,11 @@
-import { useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Tooltip,
+  useMap,
+} from 'react-leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBriefs } from '../api/briefs';
 import { rankPortfolio } from '../api/portfolio';
@@ -8,6 +14,22 @@ import { fmtMillions } from '../lib/format';
 
 const NL_CENTER: [number, number] = [53.0, -58.0];
 const NL_ZOOM = 5;
+
+/**
+ * Keeps Leaflet's internal size in sync when the map's container changes size
+ * — e.g. when the user drags the panel divider or collapses the chat panel.
+ * Without this, a resized map shows gray tiles until the next interaction.
+ */
+function ResizeInvalidator() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
 
 export function NLMap() {
   const budgetCad = useStore((s) => s.budgetCad);
@@ -56,6 +78,7 @@ export function NLMap() {
       zoomControl
       className="z-0"
     >
+      <ResizeInvalidator />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronDown } from 'lucide-react';
 import { fetchBriefs } from '../api/briefs';
 import { useStore } from '../state/store';
 import { fmtMillions, fmtTonnes } from '../lib/format';
+import { cn } from '../lib/cn';
 
 export function BriefPanel() {
   const selectedId = useStore((s) => s.selectedId);
@@ -12,6 +14,7 @@ export function BriefPanel() {
     queryKey: ['briefs'],
     queryFn: fetchBriefs,
   });
+  const [statsOpen, setStatsOpen] = useState(true);
 
   if (isLoading || !briefs) {
     return (
@@ -59,11 +62,29 @@ export function BriefPanel() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <Tile label="Capex" value={fmtMillions(e.capital_cost_cad.point)} />
-        <Tile label="$ saved / yr" value={fmtMillions(e.annual_cost_saved_cad)} />
-        <Tile label="CO₂ / yr" value={fmtTonnes(e.annual_co2_avoided_tonnes)} />
-        <Tile label="Payback" value={`${e.payback_years} y`} />
+      <div className="mb-3">
+        <button
+          onClick={() => setStatsOpen((o) => !o)}
+          className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-1.5"
+          aria-expanded={statsOpen}
+        >
+          <ChevronDown
+            size={11}
+            className={cn('transition-transform', !statsOpen && '-rotate-90')}
+          />
+          Key figures
+        </button>
+        {statsOpen && (
+          <div className="grid grid-cols-2 gap-2">
+            <Tile label="Capex" value={fmtMillions(e.capital_cost_cad.point)} />
+            <Tile
+              label="$ saved / yr"
+              value={fmtMillions(e.annual_cost_saved_cad)}
+            />
+            <Tile label="CO₂ / yr" value={fmtTonnes(e.annual_co2_avoided_tonnes)} />
+            <Tile label="Payback" value={`${e.payback_years} y`} />
+          </div>
+        )}
       </div>
 
       <article className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto pr-1 prose-headings:font-semibold prose-h2:text-sm prose-h2:mt-4 prose-h2:mb-2 prose-table:text-[11px] prose-td:px-2 prose-th:px-2">
