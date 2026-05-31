@@ -7,19 +7,34 @@ import { fetchBriefs } from '../api/briefs';
 import { useStore } from '../state/store';
 import { fmtMillions, fmtTonnes } from '../lib/format';
 import { cn } from '../lib/cn';
+import { BackendError } from './BackendError';
 
 export function BriefPanel() {
   const selectedId = useStore((s) => s.selectedId);
-  const { data: briefs, isLoading } = useQuery({
+  const {
+    data: briefs,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ['briefs'],
     queryFn: fetchBriefs,
   });
   const [statsOpen, setStatsOpen] = useState(true);
 
-  if (isLoading || !briefs) {
+  if (!briefs) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 h-full">
-        <p className="text-xs text-slate-400">Loading…</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg h-full">
+        {isError && !isLoading ? (
+          <BackendError
+            onRetry={() => refetch()}
+            isRetrying={isFetching}
+            label="brief"
+          />
+        ) : (
+          <p className="text-xs text-slate-400 p-4">Loading…</p>
+        )}
       </div>
     );
   }

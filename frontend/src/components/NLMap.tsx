@@ -11,6 +11,7 @@ import { fetchBriefs } from '../api/briefs';
 import { rankPortfolio } from '../api/portfolio';
 import { useStore } from '../state/store';
 import { fmtMillions } from '../lib/format';
+import { BackendError } from './BackendError';
 
 const NL_CENTER: [number, number] = [53.0, -58.0];
 const NL_ZOOM = 5;
@@ -39,7 +40,12 @@ export function NLMap() {
   const selectedId = useStore((s) => s.selectedId);
   const setSelectedId = useStore((s) => s.setSelectedId);
 
-  const { data: briefs } = useQuery({
+  const {
+    data: briefs,
+    isError: briefsError,
+    isFetching: briefsFetching,
+    refetch: refetchBriefs,
+  } = useQuery({
     queryKey: ['briefs'],
     queryFn: fetchBriefs,
   });
@@ -62,6 +68,15 @@ export function NLMap() {
   }, [ranking]);
 
   if (!briefs) {
+    if (briefsError) {
+      return (
+        <BackendError
+          onRetry={() => refetchBriefs()}
+          isRetrying={briefsFetching}
+          label="map"
+        />
+      );
+    }
     return (
       <div className="h-full flex items-center justify-center text-slate-400 text-sm">
         Loading map…
