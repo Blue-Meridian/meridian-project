@@ -36,8 +36,8 @@ export function ContextBar() {
         </span>
         <Chip>${(budgetCad / 1e6).toFixed(0)}M budget</Chip>
         <Chip>
-          ${(wDollar * 100).toFixed(0)} · CO₂ {(wCo2 * 100).toFixed(0)} · Eq{' '}
-          {(wEq * 100).toFixed(0)}
+          Savings {(wDollar * 100).toFixed(0)}% · CO₂ {(wCo2 * 100).toFixed(0)}% ·
+          Eq {(wEq * 100).toFixed(0)}%
         </Chip>
         {selectedId && (
           <Chip emphasis>📍 {selectedId.replace(/_/g, ' ')}</Chip>
@@ -107,7 +107,7 @@ function SliderRow({
       <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">
         <span>{label}</span>
         <span className="font-mono text-slate-700 dark:text-slate-300">
-          {value.toFixed(2)}
+          {Math.round(value * 100)}%
         </span>
       </div>
       <input

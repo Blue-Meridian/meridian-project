@@ -62,7 +62,7 @@ def _wind_quality(wind_mps: float) -> str:
 def _solar_quality(solar_ghi: float) -> str:
     if solar_ghi >= 4:
         return "strong"
-    if solar_ghi >= 3:
+    if solar_ghi >= 3.5:
         return "moderate"
     return "weak"
 

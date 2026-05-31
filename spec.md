@@ -274,7 +274,7 @@ exactly:
 
 Quality thresholds (Global Wind Atlas convention):
   wind: strong ≥ 7 m/s, moderate 5–7, weak < 5
-  solar: strong ≥ 4 kWh/m²/day, moderate 3–4, weak < 3
+  solar: strong ≥ 4 kWh/m²/day, moderate 3.5–4, weak < 3.5
 
 Do not invent numbers. If the tool returns nothing, say so.
 ```
@@ -465,10 +465,10 @@ Reads `data/community_data.json`, returns:
 Applies sizing rules from the NL Hydro Hatch 2020 study:
 
 - **Wind kW:** average load × {1.0 (weak), 1.5–2.5 (moderate), 2.0–3.5 (strong)}.
-- **Solar kW:** average load × {0 (weak), 0.3–0.6 (moderate), 0.5–1.0 (strong)}. NL's solar resource is weak-to-moderate across the board.
+- **Solar kW:** average load × {0 (weak), 0.3–0.6 (moderate), 0.5–1.0 (strong)}. NL's solar resource (3.0–3.3 kWh/m²/day) is weak across the board, so the engine sizes no solar.
 - **Battery kWh:** average load × 4 hours of storage, low/high ranges = ±25%.
 - **Retained diesel kW:** 60–80% of current peak diesel capacity (backup for storm/long-calm events).
-- **Mix label:** always "wind + battery + reduced diesel" unless solar is moderate, in which case "wind + solar + battery + reduced diesel".
+- **Mix label:** always "wind + battery + reduced diesel" unless solar is moderate, in which case "wind + solar + battery + reduced diesel". With NL's weak solar (< 3.5 kWh/m²/day everywhere), all 20 communities resolve to "wind + battery + reduced diesel" — matching the Hatch study and the real Nain project.
 
 Returns the JSON shape described in §4.3.
 

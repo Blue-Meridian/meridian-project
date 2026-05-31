@@ -32,7 +32,7 @@ exactly:
 
 Quality thresholds (Global Wind Atlas convention):
   wind:  strong >= 7 m/s, moderate 5–7, weak < 5
-  solar: strong >= 4 kWh/m²/day, moderate 3–4, weak < 3
+  solar: strong >= 4 kWh/m²/day, moderate 3.5–4, weak < 3.5
 
 Do not invent numbers. If the tool returns nothing, say so.
 ```
@@ -48,8 +48,8 @@ Condition → Action rules to paste into Orchestrate's **Behavior → Add Guidel
 
 ### 2. Quality threshold edge cases
 
-- **Condition:** Wind speed at 80 m is exactly 7.0 m/s, exactly 5.0 m/s, solar GHI is exactly 4.0 kWh/m²/day, or exactly 3.0 kWh/m²/day.
-- **Action:** Use the higher classification — a value at the threshold qualifies as the better category. 7.0 m/s wind is "strong"; 3.0 kWh/m²/day solar is "moderate".
+- **Condition:** Wind speed at 80 m is exactly 7.0 m/s, exactly 5.0 m/s, solar GHI is exactly 4.0 kWh/m²/day, or exactly 3.5 kWh/m²/day.
+- **Action:** Use the higher classification — a value at the threshold qualifies as the better category. 7.0 m/s wind is "strong"; 3.5 kWh/m²/day solar is "moderate". NL's actual solar (3.0–3.3 kWh/m²/day) sits below 3.5, so it classifies as "weak" — the recommended mix is wind + battery + reduced diesel.
 
 ### 3. Community name vs id
 

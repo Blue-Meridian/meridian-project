@@ -42,7 +42,7 @@ Condition → Action rules to paste into Orchestrate's **Behavior → Add Guidel
 
 ### 1. Drop solar when the resource is weak
 
-- **Condition:** Resource Scout's `solar_quality` is `"weak"` (GHI below 3 kWh/m²/day).
+- **Condition:** Resource Scout's `solar_quality` is `"weak"` (GHI below 3.5 kWh/m²/day). NL's communities are all 3.0–3.3, so this applies to every community.
 - **Action:** Do not include solar in the mix. Set the solar capacity range to 0 in your response. The mix label should be "wind + battery + reduced diesel", not "wind + solar + battery + reduced diesel".
 
 ### 2. Always cite the Hatch study

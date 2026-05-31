@@ -4,7 +4,8 @@ diesel for a community using NL Hydro Hatch 2020 study heuristics.
 
 Quality thresholds (Global Wind Atlas / standard solar conventions):
     wind:  strong >= 7 m/s, moderate 5–7, weak < 5
-    solar: strong >= 4 kWh/m2/day, moderate 3–4, weak < 3
+    solar: strong >= 4 kWh/m2/day, moderate 3.5–4, weak < 3.5
+           (NL's resource is 3.0–3.3 across the board → weak; sizing leans on wind)
 
 Wind sizing multipliers (× average load kW):
     strong   2.0 – 3.5
@@ -57,7 +58,7 @@ RETAINED_DIESEL_FRACTION = 0.70
 
 def _classify(wind_mps: float, solar_ghi: float) -> Tuple[str, str]:
     wq = "strong" if wind_mps >= 7 else "moderate" if wind_mps >= 5 else "weak"
-    sq = "strong" if solar_ghi >= 4 else "moderate" if solar_ghi >= 3 else "weak"
+    sq = "strong" if solar_ghi >= 4 else "moderate" if solar_ghi >= 3.5 else "weak"
     return wq, sq
 
 

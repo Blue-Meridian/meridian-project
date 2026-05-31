@@ -250,7 +250,7 @@ function WelcomeState({ onSend }: { onSend: (s: string) => void }) {
           PUB filings · Global Wind Atlas · NASA POWER · NL Hydro 2020 Hatch
           study · 4 federal funding programs.{' '}
           <span className="font-mono text-emerald-600 dark:text-emerald-400">
-            258/258 numbers governance-verified.
+            257/257 numbers governance-verified.
           </span>
         </p>
       </div>

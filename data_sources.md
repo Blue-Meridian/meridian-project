@@ -172,7 +172,7 @@ The real-world projects we use to ground Meridian's recommendations in observabl
 
 - **Publisher / project lead:** Newfoundland and Labrador Hydro.
 - **What it provides:** Active solar installations in several Nunatsiavut communities (Hopedale and others), demonstrating that modest solar contributions are operationally viable in Labrador despite the weak solar resource.
-- **Use in Meridian:** Real-project status note for Hopedale; informs the System Designer's willingness to include solar in the "wind + solar + battery + reduced diesel" mix for sites with moderate (≥3 kWh/m²/day) solar.
+- **Use in Meridian:** Real-project status note for Hopedale. The System Designer only adds solar to the mix for sites with moderate (≥3.5 kWh/m²/day) solar; NL's communities (3.0–3.3) sit below that, so the recommended mix is wind + battery + reduced diesel. The Hopedale pilot is a modest demonstration, not a sizing driver.
 - **Where in code:** `data/community_data.json` Hopedale record (`real_project_status`).
 - **Find it:** NL Hydro site, "Renewables in Isolated Systems" press releases.
 

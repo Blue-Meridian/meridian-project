@@ -190,7 +190,7 @@ FUNDING_LINE = "- **{name}** — indicative coverage up to **${max_mil:.1f} M**.
 
 def _quality(wind_mps: float, solar_ghi: float) -> tuple[str, str]:
     wq = "strong" if wind_mps >= 7 else "moderate" if wind_mps >= 5 else "weak"
-    sq = "strong" if solar_ghi >= 4 else "moderate" if solar_ghi >= 3 else "weak"
+    sq = "strong" if solar_ghi >= 4 else "moderate" if solar_ghi >= 3.5 else "weak"
     return wq, sq
 
 
