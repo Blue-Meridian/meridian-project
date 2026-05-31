@@ -10,11 +10,9 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60_000,
       refetchOnWindowFocus: false,
-      // The backend runs on a small VM that can cold-start. Retry a handful of
-      // times with capped exponential backoff (~0,1,2,4,8s) so a sleepy API
-      // recovers on its own instead of leaving panels stuck on "Loading…".
-      retry: 4,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+      // Data fetchers are local-first (bundled JSON with the live API as an
+      // override), so they don't reject and don't need query-level retries.
+      retry: false,
       refetchOnReconnect: true,
     },
   },
