@@ -50,19 +50,15 @@ export function ContextBar() {
 
       {open && (
         <div className="mt-3 grid grid-cols-4 gap-3 pb-2">
-          <div>
-            <label className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold block">
-              Budget ($M)
-            </label>
-            <input
-              type="number"
-              min={0}
-              step={5}
-              value={budgetCad / 1e6}
-              onChange={(e) => setBudget(Number(e.target.value) * 1e6)}
-              className="w-full mt-1 px-2 py-1.5 text-sm rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-ibm-500"
-            />
-          </div>
+          <SliderRow
+            label="Budget"
+            value={budgetCad / 1e6}
+            min={0}
+            max={300}
+            step={5}
+            display={`$${Math.round(budgetCad / 1e6)}M`}
+            onChange={(m) => setBudget(m * 1e6)}
+          />
           <SliderRow label="$ savings" value={wDollar} onChange={setWDollar} />
           <SliderRow label="CO₂ avoided" value={wCo2} onChange={setWCo2} />
           <SliderRow label="Equity (Indigenous)" value={wEq} onChange={setWEq} />
@@ -93,28 +89,40 @@ function Chip({
   );
 }
 
+// Shared slider. Defaults to a 0–1 weight that reads as a percentage; pass
+// min/max/step/display to repurpose it (e.g. the 0–300 Budget slider). Using
+// one control for budget + weights keeps the row visually consistent and
+// avoids the native number-spinner arrows that clashed with the aesthetic.
 function SliderRow({
   label,
   value,
   onChange,
+  min = 0,
+  max = 1,
+  step = 0.05,
+  display,
 }: {
   label: string;
   value: number;
   onChange: (n: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  display?: string;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">
         <span>{label}</span>
         <span className="font-mono text-slate-700 dark:text-slate-300">
-          {Math.round(value * 100)}%
+          {display ?? `${Math.round(value * 100)}%`}
         </span>
       </div>
       <input
         type="range"
-        min={0}
-        max={1}
-        step={0.05}
+        min={min}
+        max={max}
+        step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full mt-1"

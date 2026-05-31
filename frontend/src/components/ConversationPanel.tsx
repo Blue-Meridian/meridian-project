@@ -389,6 +389,16 @@ function MessageRow({
   // Coordinator turns get the live agent pipeline above the brief; Granite
   // turns render exactly as before.
   const isCoordinator = message.mode === 'coordinator';
+  // The run can fail mid-pipeline (e.g. an Orchestrate graph recursion limit).
+  // Those failures arrive as plain assistant text, not an exception, so detect
+  // the known markers and flip the pipeline to its failed state instead of
+  // letting the scripted timeline show a fake all-done.
+  const errored =
+    isCoordinator &&
+    !streaming &&
+    /recursion limit|encountered an error|⚠️|GRAPH_RECURSION/i.test(
+      message.content,
+    );
   return (
     <div className="flex gap-3">
       <MeridianAvatar
@@ -397,7 +407,9 @@ function MessageRow({
         className="mt-0.5 flex-shrink-0"
       />
       <div className="flex-1 min-w-0">
-        {isCoordinator && <AgentPipeline streaming={streaming} />}
+        {isCoordinator && (
+          <AgentPipeline streaming={streaming} errored={errored} />
+        )}
         {message.content ? (
           <article className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:font-semibold prose-h1:text-base prose-h2:text-sm prose-h2:mt-3 prose-h2:mb-1.5 prose-table:text-[12px] prose-td:px-2 prose-th:px-2">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
