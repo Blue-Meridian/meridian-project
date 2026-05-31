@@ -101,16 +101,17 @@ The model is also explicitly forbidden in its instructions from:
 
 ---
 
-## Governance integration (watsonx.governance)
+## Number-integrity self-check
 
-The evaluation script `scripts/evaluate_briefs.py` is designed to feed a watsonx.governance evaluation:
+> Meridian does **not** use IBM watsonx.governance. This check is the team's own deterministic
+> Python — the mechanism behind the "numbers can't drift" guarantee.
+
+The evaluation script `scripts/evaluate_briefs.py`:
 
 - Output format: structured JSON in `governance/eval_briefs_report.json`.
 - Metric: number_match_rate — fraction of headline numbers that appear verbatim in the rendered brief.
 - Pass threshold: 100% in deterministic-fallback mode (Python templating); 95% suggested when wired to LLM-backed Brief Writer.
 - Failure mode: any drift logs the field, the expected value, and the brief excerpt for review.
-
-The model card itself can be uploaded to watsonx.governance as the AI use case's documentation artefact.
 
 ---
 

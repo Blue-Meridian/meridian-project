@@ -207,7 +207,7 @@ For terminology and formal governance structure. Meridian refers to Indigenous N
 
 ## 7. Platform and AI
 
-Meridian uses **all four** IBM watsonx products available in the hackathon environment. Each does a distinct job.
+Meridian genuinely uses **three** IBM watsonx products available in the hackathon environment (plus watsonx.ai Studio / Prompt Lab for prompt authoring). Each does a distinct job.
 
 ### 7.1 IBM watsonx.ai Runtime
 
@@ -230,16 +230,19 @@ Meridian uses **all four** IBM watsonx products available in the hackathon envir
 - **Where in code:** `agents/*.md` (paste-ready definitions), `scripts/run_batch.py` (`llm_grant_finder` and `llm_brief_writer` REST stubs), `tools/api.py` (OpenAPI spec imported into the Orchestrate catalog).
 - **Note:** Tools are exposed to Orchestrate via FastAPI's auto-generated OpenAPI; the LLM-mode batch script's REST stubs need to be wired to the team's specific Orchestrate REST URL pattern before LLM-backed batch generation works.
 
-### 7.4 IBM watsonx.governance
+### 7.4 Number-integrity self-check (Meridian's own, not an IBM product)
 
-- **Publisher:** IBM Corporation.
-- **What it provides:** Model evaluation, monitoring, model cards, and audit trails for AI use cases. Meridian uses governance to guard against hallucinated numbers in Brief Writer outputs.
+> Meridian does **not** use IBM watsonx.governance. Number integrity is enforced by the team's own
+> deterministic Python script — kept here because auditability still matters to the
+> federal-program-officer persona, just without claiming a product we didn't use.
+
+- **What it provides:** A drift check that guards against hallucinated numbers in Brief Writer output.
 - **Where in code:**
   - `scripts/evaluate_briefs.py` — drift evaluation. Loops every brief and verifies that headline numbers in the rendered markdown match the structured fields verbatim. Outputs `governance/eval_briefs_report.json`.
   - `governance/model_card.md` — model card covering what the model decides, what it explicitly does not decide, known limitations, bias considerations, and the equity-multiplier framing.
   - `governance/eval_briefs_report.json` — generated audit report (created on first run of the eval script).
 - **Thresholds:** 100% match required in fallback mode (Python templating); ≥ 95% in LLM-backed mode. Below threshold, the script exits non-zero and lists the drifted fields per community.
-- **Why this matters:** maps directly to the hackathon rubric's "responsible, secure, and transparent AI" language and to the federal-program-officer persona's need for auditable recommendations.
+- **Why this matters:** maps to the federal-program-officer persona's need for auditable recommendations — every headline number is provably the deterministic engine's output.
 
 ---
 
